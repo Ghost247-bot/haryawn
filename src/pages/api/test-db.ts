@@ -1,25 +1,28 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import prisma from '../../lib/prisma';
+import { supabase } from '../../lib/supabase';
+import type { NextApiRequest, NextApiResponse } from 'next';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   try {
     // Test database connection
-    await prisma.$queryRaw`SELECT 1`;
-    
-    // Get count of contact messages
-    const count = await prisma.contactMessage.count();
-    
-    res.status(200).json({ 
-      success: true, 
-      message: 'Database connection successful',
-      contactMessagesCount: count
+    const { data, error } = await supabase
+      .from('contact_messages')
+      .select('count')
+      .limit(1);
+
+    if (error) throw error;
+
+    return res.status(200).json({ 
+      status: 'Database connection successful',
+      messageCount: data?.length || 0
     });
   } catch (error) {
-    console.error('Database connection error:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Database connection failed',
-      details: error instanceof Error ? error.message : 'Unknown error'
+    console.error('Database connection test failed:', error);
+    return res.status(500).json({ 
+      status: 'Database connection failed',
+      error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 } 

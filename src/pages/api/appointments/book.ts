@@ -1,5 +1,5 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import prisma from '../../../lib/prisma';
+import { supabase } from '../../../lib/supabase';
+import type { NextApiRequest, NextApiResponse } from 'next';
 import { withErrorHandler } from '../../../middleware/error';
 import { withRateLimit } from '../../../middleware/rateLimit';
 import logger from '../../../utils/logger';
@@ -54,14 +54,17 @@ async function validateAppointment(data: any) {
   return errors;
 }
 
-async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   if (req.method !== 'POST') {
     logger.warn('Invalid method for appointment booking', { method: req.method });
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const { name, email, phone, date, time, service, notes } = req.body;
+    const { name, email, phone, date, time, service, message } = req.body;
     
     // Validate input
     const validationErrors = await validateAppointment(req.body);
@@ -70,19 +73,24 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       return res.status(400).json({ errors: validationErrors });
     }
 
-    // Create appointment
-    const appointment = await prisma.appointment.create({
-      data: {
-        name,
-        email,
-        phone: phone || null,
-        date: new Date(date + 'T' + time),
-        time,
-        service,
-        notes: notes || null,
-        status: 'pending'
-      }
-    });
+    const { data: appointment, error } = await supabase
+      .from('appointments')
+      .insert([
+        {
+          name,
+          email,
+          phone,
+          date,
+          time,
+          service,
+          message,
+          status: 'pending'
+        }
+      ])
+      .select()
+      .single();
+
+    if (error) throw error;
 
     logger.info('Appointment created', { 
       appointmentId: appointment.id,
@@ -90,16 +98,13 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       date: appointment.date
     });
 
-    return res.status(200).json({
-      message: 'Appointment scheduled successfully',
-      id: appointment.id
-    });
+    return res.status(200).json({ appointment });
   } catch (error) {
-    logger.error('Error handling appointment booking', {
+    logger.error('Error booking appointment', {
       error: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined
     });
-    throw error;
+    return res.status(500).json({ error: 'Failed to book appointment' });
   }
 }
 

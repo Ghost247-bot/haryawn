@@ -1,41 +1,26 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { NextApiHandler } from 'next';
+import { PostgrestError } from '@supabase/supabase-js';
 
-export function withErrorHandler(handler: NextApiHandler) {
+export function withErrorHandler(handler: Function) {
   return async (req: NextApiRequest, res: NextApiResponse) => {
     try {
-      return await handler(req, res);
-    } catch (error: any) {
+      await handler(req, res);
+    } catch (error) {
       console.error('API Error:', error);
 
-      // Handle Prisma errors
-      if (error?.name === 'PrismaClientKnownRequestError') {
+      // Handle Supabase errors
+      if (error instanceof PostgrestError) {
         return res.status(400).json({
-          error: 'Database operation failed',
-          details: error.message
+          error: 'Database error',
+          details: error.message,
+          code: error.code
         });
       }
 
-      // Handle validation errors
-      if (error?.name === 'ValidationError') {
-        return res.status(400).json({
-          error: 'Validation failed',
-          details: error.message
-        });
-      }
-
-      // Handle unauthorized errors
-      if (error?.name === 'UnauthorizedError') {
-        return res.status(401).json({
-          error: 'Unauthorized',
-          details: error.message
-        });
-      }
-
-      // Default error
+      // Handle other errors
       return res.status(500).json({
         error: 'Internal server error',
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        details: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   };

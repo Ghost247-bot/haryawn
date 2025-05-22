@@ -1,42 +1,45 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import prisma from '../../../lib/prisma';
+import { supabase } from '../../../lib/supabase';
+import type { NextApiRequest, NextApiResponse } from 'next';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const { messageId, emoji } = req.body;
+    const { messageId, reaction } = req.body;
 
-    if (!messageId || !emoji) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
+    // Get the current message
+    const { data: message, error: fetchError } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('id', messageId)
+      .single();
 
-    // Get current message
-    const message = await prisma.message.findUnique({
-      where: { id: messageId },
-    });
-
+    if (fetchError) throw fetchError;
     if (!message) {
       return res.status(404).json({ error: 'Message not found' });
     }
 
-    // Get current reactions or initialize empty object
-    const currentReactions = message.reactions as { [key: string]: number } || {};
+    // Update the message with the new reaction
+    const { data: updatedMessage, error: updateError } = await supabase
+      .from('messages')
+      .update({ reaction })
+      .eq('id', messageId)
+      .select()
+      .single();
 
-    // Update reaction count
-    currentReactions[emoji] = (currentReactions[emoji] || 0) + 1;
+    if (updateError) throw updateError;
 
-    // Update message with new reactions
-    const updatedMessage = await prisma.message.update({
-      where: { id: messageId },
-      data: { reactions: currentReactions },
-    });
-
-    res.status(200).json(updatedMessage);
+    return res.status(200).json({ message: updatedMessage });
   } catch (error) {
-    console.error('Error handling reaction:', error);
-    res.status(500).json({ error: 'Failed to process reaction' });
+    console.error('Error updating message reaction:', error);
+    return res.status(500).json({ 
+      error: 'Failed to update message reaction',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 } 
