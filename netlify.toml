@@ -1,5 +1,5 @@
 [build]
-  command = "rm -rf .next node_modules/.cache && npm install && npm run build"
+  command = "npm run build"
   publish = ".next"
   environment = { 
     NODE_VERSION = "18.17.0",
@@ -12,6 +12,7 @@
 [build.cache]
   paths = [
     ".next/cache",
+    "node_modules",
     "node_modules/.cache"
   ]
 
