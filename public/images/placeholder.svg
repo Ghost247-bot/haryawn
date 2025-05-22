@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="400" height="400" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="400" height="400" fill="#f3f4f6"/>
+  
+  <!-- Profile icon -->
+  <circle cx="200" cy="150" r="70" fill="#d1d5db"/>
+  <circle cx="200" cy="120" r="40" fill="#9ca3af"/>
+  <path d="M120 280 C120 230 280 230 280 280 L280 400 L120 400" fill="#d1d5db"/>
+  
+  <!-- Text -->
+  <text x="200" y="350" font-family="Arial" font-size="16" fill="#6b7280" text-anchor="middle">
+    Profile Photo
+  </text>
+</svg> 
