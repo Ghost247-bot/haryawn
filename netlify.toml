@@ -9,8 +9,11 @@
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
-[[plugins]]
-  package = "@netlify/plugin-cache-killer"
+[build.cache]
+  paths = [
+    ".next/cache",
+    "node_modules/.cache"
+  ]
 
 [[redirects]]
   from = "/*"
