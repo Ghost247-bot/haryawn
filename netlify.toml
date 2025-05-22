@@ -7,4 +7,12 @@
   }
 
 [[plugins]]
-  package = "@netlify/plugin-nextjs" 
+  package = "@netlify/plugin-nextjs"
+
+[[plugins]]
+  package = "@netlify/plugin-cache-killer"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200 
