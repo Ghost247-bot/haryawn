@@ -20,9 +20,6 @@ const nextConfig = {
   basePath: '',
   // Configure asset prefix if needed
   assetPrefix: '',
-  env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
-  },
   typescript: {
     ignoreBuildErrors: false,
   },
