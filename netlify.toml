@@ -1,20 +1,13 @@
 [build]
   command = "npm run build"
   publish = ".next"
-  environment = { 
-    NODE_VERSION = "18.17.0",
-    NEXT_PUBLIC_API_URL = "https://api.example.com"  # Replace with your actual API URL
-  }
+  environment = { NODE_VERSION = "18.17.0", NEXT_PUBLIC_API_URL = "https://api.example.com" }
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
 [build.cache]
-  paths = [
-    ".next/cache",
-    "node_modules",
-    "node_modules/.cache"
-  ]
+  paths = [".next/cache", "node_modules", "node_modules/.cache"]
 
 [[redirects]]
   from = "/*"
