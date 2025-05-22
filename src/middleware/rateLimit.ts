@@ -27,7 +27,10 @@ export function withRateLimit(
   const { maxRequests, windowMs } = { ...defaultConfig, ...config };
 
   return async (req: NextApiRequest, res: NextApiResponse) => {
-    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+    const forwardedFor = req.headers['x-forwarded-for'];
+    const ip = Array.isArray(forwardedFor) 
+      ? forwardedFor[0] 
+      : forwardedFor || req.socket.remoteAddress || 'unknown';
     const now = Date.now();
 
     // Initialize or get existing rate limit data
